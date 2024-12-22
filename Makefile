@@ -2,7 +2,8 @@
 
 TEX = pdflatex
 BIB = bibtex
-TEXFILE = expose
+#TEXFILE = expose
+TEXFILE = paper
 OUTDIR = out
 
 all: $(TEXFILE).pdf

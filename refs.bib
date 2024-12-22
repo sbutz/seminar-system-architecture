@@ -1,0 +1,17 @@
+@inproceedings{alpay2021adaptivecpp,
+author = {Alpay, Aksel and Heuveline, Vincent},
+title = {AdaptiveCpp Stdpar: C++ Standard Parallelism Integrated Into a SYCL Compiler},
+year = {2024},
+isbn = {9798400717901},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/3648115.3648117},
+doi = {10.1145/3648115.3648117},
+abstract = {Expressing data parallel programs using C++ standard parallelism is attractive not only due to the simplicity of the model, but also due to its highly idiomatic nature. This programming model, commonly referred to as stdpar, can also be used for accelerator programming by offloading calls to standard algorithms, and is supported by multiple vendors, such as NVIDIA with nvc++, AMD with roc-stdpar, and Intel with the new ICPX -fsycl-pstl-offload flag. We present AdaptiveCpp stdpar, a novel stdpar implementation that is part of the AdaptiveCpp SYCL implementation. AdaptiveCpp stdpar is the very first stdpar implementation to demonstrate performance across GPUs from Intel, NVIDIA and AMD, and allows users to start developing applications using C++ standard algorithms, and then progressively move to SYCL as more control is needed. We find that our solution outperforms all vendor stdpar compilers on HPC GPUs in the majority of tested applications, in some configurations by up to an order of magnitude. Furthermore, we show how AdaptiveCpp outperforms nvc++ in a latency-bound code for all tested problem sizes by up to 80\% on NVIDIA A100 due to novel optimizations. Our stdpar implementation deviates from existing implementations by relying on a tighter integration with compiler and runtime, including e.g. dedicated optimization passes to elide synchronization, automatically prefetching required allocations, and an offloading heuristic.},
+booktitle = {Proceedings of the 12th International Workshop on OpenCL and SYCL},
+articleno = {5},
+numpages = {12},
+keywords = {C++, CUDA, GPU, HIP, LLVM, SPIR-V, SYCL, compilers, heterogeneity, parallelism, parallelruntimes, stdpar},
+location = {Chicago, IL, USA},
+series = {IWOCL '24}
+}
