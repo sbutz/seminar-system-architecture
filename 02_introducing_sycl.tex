@@ -179,7 +179,7 @@ Regardless of the queue type, SYCL provides mechanisms to synchronize tasks and 
 \cite{SYCL2020}
 
 \subsubsection{Memory Management and Data Flow}
-\label{sec:sycl-memory-management}
+\label{sec:sycl_memory}
 
 Memory management is a critical aspect of SYCL, with two main approaches: \textbf{buffers and accessors} and \textbf{Unified Shared
 Memory (USM)}.
@@ -265,7 +265,7 @@ specific accelerator architecture~\cite{SYCL2020}.
 
 AdaptiveCpp implements SYCL’s memory model with a hybrid approach combining automatic and explicit strategies.
 For a detailed description of Unified Shared Memory (USM) and other memory types, please refer to 
-subsection~\ref{sec:sycl-memory-management}. The Buffer-Accessor Model uses \texttt{sycl::buffer<T>} to track memory 
+subsection~\ref{sec:sycl_memory}. The Buffer-Accessor Model uses \texttt{sycl::buffer<T>} to track memory 
 regions across host and device, while \texttt{sycl::accessor} objects define access modes (read/write) and 
 trigger implicit data transfers. The runtime constructs a directed acyclic graph (DAG) of kernel dependencies, 
 synchronizing memory automatically. For instance, overlapping writes to a buffer are resolved through 

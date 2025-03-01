@@ -1,0 +1,286 @@
+
+\section{Using SYCL as an backend for C++ standard parallelism}
+
+
+
+
+% 4.1
+\subsection{Design Goals}
+\label{sec:design_goals}
+
+The following section is based on the work of Aksel Alpay and Vincent Heuveline in their paper
+\textit{AdaptiveCpp Stdpar: C++ Standard Parallelism Integrated Into a SYCL Compiler}~\cite{alpay2021}.
+Their approach to integrating SYCL as a backend for C++ Standard Parallelism (\textit{stdpar}) is guided
+by three main design goals: (1) support for a wide range of hardware, (2) maintaining an open-source
+implementation, and (3) achieving tight integration with the compiler for improved performance.
+
+\paragraph{Wide Range of Hardware Support}
+A fundamental goal of AdaptiveCpp Stdpar is to provide a backend capable of supporting multiple hardware
+architectures. Unlike vendor-specific solutions, such as NVIDIA’s \texttt{nvc++} compiler, which restricts
+offloading to NVIDIA GPUs, AdaptiveCpp extends support to a broader range of devices, including CPUs,
+Intel GPUs, AMD GPUs, and NVIDIA GPUs. By leveraging SYCL’s backend abstraction, the implementation
+ensures portability across different hardware vendors while enabling the use of \textit{stdpar} without
+modifying source code.
+
+\paragraph{Open-Source Implementation}
+Another key goal is to provide an open-source alternative to proprietary solutions. Open-source availability
+not only fosters community-driven development and collaboration but also allows researchers and developers
+to extend and customize the implementation. AdaptiveCpp is developed as part of an open ecosystem, enabling
+transparency in its optimizations and ensuring that it remains adaptable to future hardware architectures
+and software changes.
+
+\paragraph{Tight Integration with the Compiler}
+Unlike NVIDIA’s \textit{stdpar} implementation, which relies primarily on a runtime library for offloading,
+AdaptiveCpp integrates tightly into the compiler toolchain. This approach allows for more efficient code
+generation, improved memory management, and reduced runtime overhead. By embedding device-specific
+optimizations directly into the compilation process, AdaptiveCpp minimizes the need for manual tuning and
+achieves performance levels closer to native SYCL or CUDA implementations.
+
+\noindent These three goals form the foundation of AdaptiveCpp Stdpar’s design and influence its approach
+to execution and memory management, which will be explored in the following sections.
+
+
+
+
+
+
+% 4.2
+\subsection{Challenges}
+\label{sec:challenges}
+
+The following section discusses key challenges in integrating SYCL as a backend for C++ Standard Parallelism
+(stdpar). This analysis is based on the work of Aksel Alpay and Vincent Heuveline in their paper \textit{AdaptiveCpp
+Stdpar: C++ Standard Parallelism Integrated Into a SYCL Compiler}~\cite{alpay2021}. The integration of stdpar with
+SYCL presents several difficulties due to fundamental differences in execution models, memory handling, and
+synchronization mechanisms. 
+
+\paragraph{Execution Model Differences} 
+C++ Standard Parallelism (stdpar) provides a high-level abstraction of parallel execution using execution policies
+such as \texttt{std::execution::par} and \texttt{std::execution::par\_unseq}. These policies allow algorithms to be
+expressed in a portable way, but they do not impose a specific execution model. In contrast, SYCL requires an
+explicit task-based execution model using command groups, queues, and kernel enqueuing. This fundamental
+mismatch poses challenges in mapping stdpar's implicit parallel execution semantics onto SYCL's explicitly managed
+execution graph.
+
+\paragraph{Memory Management Mismatch} 
+stdpar assumes implicit memory management, where data movement and allocation are handled transparently by
+the compiler and runtime. In contrast, SYCL requires explicit memory handling using buffers, accessors, or Unified
+Shared Memory (USM). stdpar does not define explicit data transfer mechanisms, leading to potential mismatches
+when interfacing with SYCL’s explicit memory model. Managing memory allocation and ensuring correct data
+movement between host and device adds complexity to the integration.
+
+\paragraph{Synchronization and Task Scheduling} 
+stdpar does not provide explicit synchronization mechanisms; it relies on the underlying execution backend to
+ensure correct ordering of operations. However, SYCL employs an explicit dependency model where task execution
+must be synchronized using events, dependency graphs, or barriers. This difference introduces challenges in
+enforcing correct execution ordering when translating stdpar algorithms into SYCL kernels.
+
+\paragraph{Device Execution Constraints} 
+stdpar is designed to work seamlessly with standard C++ execution environments, but SYCL imposes constraints
+on device execution. Notably, device kernels in SYCL have restrictions such as the absence of dynamic memory
+allocation, function pointers, and exception handling. These limitations create difficulties in porting certain stdpar
+constructs to SYCL-compatible execution models.
+
+\paragraph{Performance Overhead} 
+stdpar is optimized for CPU execution, where compilers can efficiently schedule operations across multiple cores.
+However, SYCL introduces additional overhead due to explicit kernel enqueuing and execution on heterogeneous
+devices. The need to manage execution queues, memory transfers, and synchronization mechanisms can lead to
+performance bottlenecks, making efficient stdpar execution on SYCL devices a challenging task.
+
+These challenges highlight the complexity of integrating stdpar with SYCL. The following sections will explore how
+these issues are addressed to enable seamless execution of stdpar algorithms on heterogeneous hardware
+through SYCL. Performance optimizations will be discussed in section \ref{sec:performance}.
+
+
+
+
+
+
+% 4.3
+\subsection{Providing stdpar Execution Model Using SYCL as Backend}
+\label{sec:stdpar_to_sycl}
+
+The following section describes how C++ Standard Parallelism (stdpar) execution is mapped to SYCL, allowing
+stdpar algorithms to offload computations to heterogeneous hardware via AdaptiveCpp. The integration requires
+automatic translation of stdpar execution policies into SYCL’s explicit task-based execution model. This work is
+based on the research of Aksel Alpay and Vincent Heuveline in their paper \textit{AdaptiveCpp Stdpar: C++ Standard
+Parallelism Integrated Into a SYCL Compiler}~\cite{alpay2021}.
+
+\paragraph{Automatic Detection of Code for Device Execution}
+stdpar does not explicitly specify which code should execute on a device. Instead, the AdaptiveCpp compiler
+analyzes stdpar algorithms and detects execution regions suitable for device offloading. When an execution
+policy such as \texttt{std::execution::par} is used, the compiler determines if a function can be offloaded and
+automatically transforms it into a SYCL-compatible kernel. Unlike traditional SYCL programming, where explicit
+kernel definitions are required, AdaptiveCpp eliminates this requirement by generating SYCL kernels dynamically.
+
+A key challenge in automatic detection is ensuring that only the correct portions of an algorithm are offloaded.
+Certain C++ constructs, such as those involving indirect memory access or dynamic dispatch, may be problematic
+on accelerators. AdaptiveCpp must analyze function dependencies and ensure that only compute-intensive and
+parallelizable operations are translated into SYCL kernels while keeping host-side operations intact. This requires
+sophisticated compiler transformations to split execution logic efficiently.
+
+\paragraph{Queue-Based Execution and Kernel Dispatch}
+stdpar does not expose an explicit queueing model, whereas SYCL requires that all device execution be submitted
+through a queue. AdaptiveCpp bridges this gap by mapping stdpar algorithm calls to SYCL kernels, which are
+enqueued into a SYCL queue. If stdpar operations have dependencies on previous computations, execution order
+must be preserved, requiring an implicit synchronization mechanism within the queue.
+
+To ensure efficient execution, AdaptiveCpp uses a queue management system that dynamically selects an optimal
+SYCL queue based on the device type and workload characteristics. This avoids unnecessary overhead when
+executing stdpar operations on heterogeneous devices. Moreover, the queueing mechanism ensures that
+multiple stdpar operations submitted in sequence are optimally scheduled, reducing kernel launch latency.
+
+\paragraph{Mapping Parallel Execution to SYCL Kernels}
+stdpar abstracts parallel execution through execution policies such as \texttt{std::execution::par}, whereas
+SYCL requires explicit kernel invocation via \texttt{parallel\_for}. The AdaptiveCpp compiler translates
+stdpar execution policies into appropriate SYCL parallel constructs. For example, a call to \\
+\texttt{std::for\_each(std::execution::par, ...)} is transformed into a SYCL \texttt{parallel\_for} execution.
+
+An important consideration when generating SYCL kernels is handling workload distribution efficiently.
+AdaptiveCpp performs compile-time and runtime analysis to determine the best way to partition work
+across available processing units. This involves selecting between different SYCL execution models,
+including \texttt{nd\_range} kernels for fine-grained control or implicit work partitioning when possible.
+
+\paragraph{Handling Work-Group and Work-Item Distribution}
+stdpar does not provide direct control over work-group and work-item distribution, but SYCL requires this
+information for kernel execution. AdaptiveCpp automatically selects an appropriate \texttt{nd\_range} or
+implicit work division for SYCL kernels based on the target hardware. The compiler queries device capabilities
+(e.g., maximum work-group size, available compute units) and determines an efficient execution strategy.
+
+For large workloads, AdaptiveCpp optimizes work distribution using device-specific heuristics. On GPUs,
+it ensures that the number of work-items per work-group is tuned to achieve high resource utilization.
+On CPUs, AdaptiveCpp adapts its execution strategy to leverage SIMD execution where applicable, ensuring
+that performance benefits are retained across different architectures.
+
+\paragraph{Synchronization between stdpar Operations in SYCL}
+stdpar does not enforce explicit synchronization between operations, whereas SYCL requires explicit event
+handling for execution dependencies. AdaptiveCpp ensures correct execution order by introducing SYCL events
+where necessary. If an stdpar algorithm has a dependency on a previous computation, AdaptiveCpp generates an
+appropriate \texttt{sycl::event} to ensure proper sequencing. Unnecessary synchronization is avoided by applying
+graph-based dependency tracking, reducing execution overhead.
+
+To further optimize performance, AdaptiveCpp can elide certain synchronization points when it detects that
+dependent operations do not conflict. This ensures that execution proceeds efficiently without excessive
+barriers that could degrade parallel performance.
+
+This section outlines the key transformations required to map stdpar execution semantics to SYCL’s explicit
+execution model. The next section will explore memory management strategies required to support stdpar execution
+in a SYCL backend.
+
+
+
+
+
+
+
+% 4.4
+\subsection{Handling of Memory Allocations and Data Transfers}
+\label{sec:memory_handling}
+
+\subsubsection{Memory Models in stdpar and SYCL}
+\label{sec:memory_models}
+
+The integration of SYCL as a backend for C++ Standard Parallelism (stdpar) introduces significant challenges due
+to differences in memory models. stdpar assumes an implicit memory management approach, where memory
+allocation and transfers are handled transparently by the compiler and runtime system. In contrast, SYCL requires
+explicit memory management, where developers must define how data is allocated, transferred, and accessed
+between the host and device.
+
+A detailed introduction to SYCL’s memory model has already been provided in Section~\ref{sec:sycl_memory}.
+This subsection will build upon that foundation by focusing on the specific challenges that arise when mapping
+stdpar’s implicit memory assumptions onto SYCL’s explicit memory management.
+
+\paragraph{Memory Model in stdpar}
+stdpar abstracts memory operations from the programmer, providing a high-level interface where data movement
+is implicitly managed. When executing an algorithm using \texttt{std::execution::par} or \texttt{par\_unseq},
+the underlying implementation determines whether memory needs to be allocated on an accelerator and
+performs the necessary data transfers automatically. This approach simplifies development but requires the
+compiler and runtime to infer memory access patterns efficiently.
+
+stdpar’s implicit memory model eliminates the need for explicit memory handling, allowing users to focus on
+algorithmic development rather than low-level memory operations. However, this abstraction introduces challenges
+when integrating stdpar with SYCL’s explicit memory management model.
+
+\paragraph{Memory Model in SYCL}
+SYCL provides a flexible but explicit memory model, giving developers fine-grained control over data movement
+and synchronization. It offers two primary approaches to memory management: \textbf{buffers/accessors} and
+\textbf{Unified Shared Memory (USM)}, both of which must be explicitly managed.
+
+\textbf{Buffer-Accessor Model:} This model requires memory to be allocated as \texttt{sycl::buffer<T>} objects.
+Access to the buffer contents is provided through \texttt{sycl::accessor} objects, which specify whether the
+memory is read-only, write-only, or read-write. The SYCL runtime tracks dependencies between memory accesses
+and ensures correct synchronization of buffers between host and device.
+
+\textbf{Unified Shared Memory (USM):} As previously discussed in Section~\ref{sec:sycl_memory}, USM allows
+developers to allocate memory that can be accessed by both the host and device without requiring explicit buffer
+management. This model simplifies memory handling and is particularly useful for stdpar integration, as it aligns
+with stdpar's expectation of automatic memory management.
+
+The explicit nature of SYCL’s memory model presents challenges when integrating stdpar, as stdpar assumes
+automatic memory handling while SYCL requires explicit memory specification. The next section will explore
+how AdaptiveCpp bridges this gap to ensure seamless integration of stdpar execution within SYCL’s memory
+management framework.
+
+\subsubsection{Managing Data Transfers in AdaptiveCpp}
+\label{sec:data_transfers}
+
+The integration of stdpar with SYCL requires efficient memory transfers between the host and the target device.
+Since stdpar does not expose an explicit memory management model, AdaptiveCpp must ensure that data movement
+is handled correctly without requiring user intervention.
+
+\paragraph{Intercepting stdpar Memory Operations}
+AdaptiveCpp intercepts stdpar memory operations and translates them into SYCL-compatible memory management
+calls. This ensures that memory allocations and transfers conform to SYCL’s explicit memory model while preserving
+the abstraction provided by stdpar. Depending on the execution context, AdaptiveCpp dynamically decides whether
+to use USM or explicit buffer-accessor transfers.
+
+\paragraph{Ensuring Correct Data Transfers}
+stdpar abstracts away memory movement, requiring AdaptiveCpp to infer data transfer needs at runtime.
+When USM is used, memory migration is handled transparently by the SYCL runtime. However, in cases where
+explicit buffers are used, AdaptiveCpp ensures correct data placement between the host and device by managing
+data dependencies and tracking memory accesses.
+
+By leveraging SYCL’s memory management features, AdaptiveCpp enables stdpar applications to execute efficiently
+on heterogeneous devices while maintaining stdpar’s high-level abstraction of memory handling.
+
+\subsubsection{Synchronization and Memory Consistency}
+\label{sec:synchronization}
+
+stdpar provides an implicit synchronization model in which memory consistency and execution ordering are handled
+by the compiler and runtime. This abstraction simplifies development by ensuring that memory updates are
+propagated correctly without requiring explicit user intervention. However, when mapping stdpar to SYCL, these
+assumptions must be explicitly managed since SYCL requires a more fine-grained approach to synchronization.
+
+\paragraph{Explicit Synchronization in SYCL}
+SYCL introduces explicit synchronization mechanisms to manage dependencies between tasks and ensure correct
+execution order. Unlike stdpar, which abstracts synchronization, SYCL requires the use of:
+\begin{itemize}
+    \item \textbf{Events (\texttt{sycl::event}):} Used to define dependencies between kernel executions,
+    ensuring that a task does not start before its prerequisites are completed.
+    \item \textbf{Memory fences:} Necessary to guarantee memory consistency between different processing units,
+    ensuring that data written by one kernel is visible to subsequent tasks.
+    \item \textbf{Explicit host-device synchronization:} Required when data is accessed on both the host and
+    device, avoiding race conditions and undefined behavior.
+\end{itemize}
+
+\paragraph{Ensuring Correct Synchronization in AdaptiveCpp}
+To bridge the gap between stdpar’s implicit model and SYCL’s explicit requirements, AdaptiveCpp implements
+automatic synchronization management by:
+\begin{itemize}
+    \item \textbf{Generating event dependencies:} AdaptiveCpp dynamically inserts \texttt{sycl::event} objects
+    to enforce execution order where needed.
+    \item \textbf{Ensuring memory consistency:} AdaptiveCpp ensures that host-device memory consistency is
+    maintained without redundant synchronization, improving correctness.
+\end{itemize}
+
+\subsection{Conclusion}
+\label{sec:memory_conclusion}
+
+The integration of SYCL as a backend for C++ Standard Parallelism requires careful handling of memory management,
+data transfers, and synchronization. Unlike stdpar, which abstracts memory operations, SYCL enforces an explicit
+memory model that necessitates strategies to maintain correctness across heterogeneous execution environments.
+
+AdaptiveCpp effectively bridges this gap by automating memory management through USM and buffer-accessor
+models while ensuring correct synchronization between host and device execution. The performance impact of
+these design choices will be evaluated in Section 5, where optimization strategies for execution and memory
+handling are discussed in detail.

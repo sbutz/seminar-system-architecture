@@ -1,6 +1,90 @@
-\section{Introduction of C++ standard parallelism}
-%memory model
-%restrictions on code
-%backends
-%synchronization
-%compiler
+\section{Introduction to C++ Standard Parallelism (stdpar)}
+\label{sec:stdpar}
+
+The evolution of C++ has consistently aimed to enhance performance and efficiency. A significant milestone in
+this journey was the introduction of standard parallelism, commonly referred to as \textbf{stdpar}, in the
+C++17 standard. This feature provides developers with a standardized and portable approach to writing parallel
+code, facilitating the efficient utilization of modern multi-core processors and accelerators~\cite{V'yukova2018}.
+
+\subsection{Background and Motivation}
+
+Prior to stdpar, parallel programming in C++ often relied on external libraries or platform-specific
+extensions, such as OpenMP or Intel's Threading Building Blocks (TBB). While effective, these solutions lacked
+standardization, leading to portability challenges across different compilers and platforms. The need for a
+unified approach to parallelism in C++ became evident, prompting the inclusion of parallel execution policies
+in the C++17 standard~\cite{V'yukova2018}.
+
+\subsection{Overview of stdpar}
+
+stdpar introduces execution policies that dictate how standard library algorithms are executed:
+
+\begin{itemize}
+  \item \textbf{\texttt{std::execution::seq}}: Specifies sequential execution.
+  \item \textbf{\texttt{std::execution::par}}: Enables parallel execution across multiple threads.
+  \item \textbf{\texttt{std::execution::par\_unseq}}: Allows parallel execution with vectorization, combining
+  multithreading and SIMD (Single Instruction, Multiple Data) optimizations.
+\end{itemize}
+
+These policies can be applied to standard algorithms to control their execution behavior~\cite{V'yukova2018}.
+
+\subsection{Example Usage of stdpar}
+
+Here's a simple example demonstrating the use of \texttt{std::execution::par} to parallelize a standard
+algorithm:
+
+\begin{lstlisting}[language=C++, caption={Parallel execution using \texttt{std::execution::par}}]
+#include <algorithm>
+#include <execution>
+#include <vector>
+
+int main() {
+    std::vector<int> data(100000, 1);
+    std::for_each(std::execution::par, data.begin(), data.end(), [](int& x) { x *= 2; });
+}
+\end{lstlisting}
+
+In this example, \texttt{std::for\_each} applies the provided lambda function to each element in the vector
+\texttt{data} in parallel, effectively doubling each element's value.
+
+\subsection{Execution Model, Hardware Mapping, and Memory Management}
+
+The execution policy specified (e.g., \texttt{std::execution::par}) serves as a hint to the compiler and
+runtime about how the algorithm should be executed. The actual execution can vary depending on the system's
+hardware and the compiler's implementation. For instance, parallel execution may be achieved through
+multi-threading on a CPU or offloaded to a GPU if supported. This abstraction allows developers to write
+parallel code without delving into the specifics of the underlying hardware~\cite{V'yukova2018}.
+
+Memory management in stdpar is typically handled by the compiler and runtime system. When parallel algorithms
+are executed, the necessary data is usually allocated in host memory. If the computation is offloaded to an
+accelerator, such as a GPU, the compiler and runtime manage data transfers between the host and the device.
+For instance, NVIDIA's implementation of stdpar utilizes CUDA Unified Memory, allowing allocated memory to be
+visible on both the host and the device, thereby simplifying memory management for the programmer. However,
+depending on the implementation, explicit memory transfers may still be required to optimize performance for
+specific workloads~\cite{NVIDIA2020}.
+
+\subsection{Performance Considerations and Limitations}
+
+While stdpar offers several advantages, such as portability and ease of use, there are considerations and
+limitations to keep in mind:
+
+\begin{itemize}
+  \item \textbf{Backend-Dependent Performance}: The efficiency of parallel execution depends on the compiler's
+  implementation and the target hardware. Not all compilers optimize stdpar for all architectures. For
+  instance, NVIDIA's \texttt{nvc++} compiler provides limited support for C++ Parallel Algorithms on Pascal
+  architecture GPUs, as they lack independent thread scheduling necessary to properly support the
+  \texttt{std::execution::par} policy~\cite{NVIDIA2020}.
+  \item \textbf{Lack of Fine-Grained Control}: Compared to low-level parallelism models like CUDA or OpenMP,
+  stdpar provides less control over thread management and workload distribution. This abstraction can lead to
+  suboptimal performance in scenarios requiring fine-tuned parallelism.
+  \item \textbf{Compiler Support Variability}: Not all compilers fully support stdpar, and the level of
+  optimization can vary between compiler implementations. For example, as of certain versions, Clang does not
+  support C++17 execution policies~\cite{V'yukova2018}.
+  \item \textbf{Language Feature Restrictions}: Certain C++ language features and constructs should be used
+  with caution to ensure safe and efficient parallel execution. For example, the use of function pointers
+  within parallel algorithms may be restricted or unsupported, depending on the compiler and target hardware.
+  Additionally, exception handling within parallel regions is often limited, as many implementations do not
+  support exceptions in GPU code~\cite{NVIDIA2020}.
+\end{itemize}
+
+The following sections will explore how SYCL can be leveraged as a backend for stdpar to address some of these
+limitations and provide a more portable and efficient parallel programming model.
