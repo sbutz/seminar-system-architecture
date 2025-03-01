@@ -1,0 +1,292 @@
+%\section{Introduction of the SYCL programming model}
+% 4 Seiten
+% 2. Grundlagen/Stand der Technik
+%     1. Welche Grundlagen sind wichtig, um den Rest der Arbeit zu verstehen?
+
+\section{Introduction of the SYCL programming model}
+
+% standard c++17, single source, etc -> chat gpt
+% 
+% basic understanding
+% no complete guidea to SYCL
+% only details necessary to grasp how it can be unified with c++ standard parallelism
+% 
+% core concepts
+% - single source
+%     graphic on page 26
+%     restrictions for kernel code (page 14, page 28f)
+% - host and device (kernel) code
+%     can be defined as lambdas
+% - async task graphs
+%     - acyclic directed graph
+%     - nodes are work items
+%         - computations
+%         - data transfers
+%     - edges are dependencies
+%         - implicit through accessors
+%         - explicit through events
+%     - queue
+%         - in_order_queue -> always serialize
+%     - submit work: single_task, parallel_for, ...
+%     - how to synchronize?
+% - portability through different backends (opencl, cuda, hip, ...)
+%     -> use CPU, GPU, FPGA, ...
+% 
+% - choosing devices: page 29f
+%     - auto, cpu, gpu, ... (cpu for debugging)
+%     - one queue is on one device
+% 
+% put all together in an example
+% mark device vs host code
+% 
+% - memory management (page 63f)
+%     - cpu and accelerators have separate memory
+%         --> need to move data
+%         -> e.g. in cuda: data transfert to device, kernel execution, data transfer back
+%     - explicit vs implicit (via runtime)
+%         imlicit -> allocate using usm runtime
+%     - 3 approaches:
+%         - usm
+%             - unified virtual address space
+%             - requires device support
+%             - pointer allocated by usm routine is valid on both devices
+%             - types: host, device, shared
+%         - buffers
+%             -> use accessors (r/w)
+%         - images (specialized for image processing) -> exclude?
+% 
+% again putting in perspective of our example
+
+SYCL, an open standard developed by the Khronos Group, is a modern programming model designed to address the challenges of
+heterogeneous computing. Originating from the OpenCL ecosystem, SYCL builds on OpenCL's foundation but introduces higher-level
+abstractions and a more intuitive programming model. Its purpose is to simplify the development of applications that target
+heterogeneous systems, including CPUs, GPUs, and FPGAs, by leveraging standard C++ features. SYCL combines performance,
+developer productivity, and compatibility with C++ into a unified framework. 
+
+SYCL’s core advantages include:
+\begin{enumerate}
+    \item \textbf{Single-Source Programming}: Unified source files contain both host and device code, eliminating the separation
+    required by lower-level models like OpenCL.
+    \item \textbf{Portability Across Devices}: A single SYCL program can target multiple devices (CPUs, GPUs, and FPGAs) without
+    requiring changes to the code.
+    \item \textbf{High-Level Abstractions}: Developers can use standard C++ constructs, such as templates, lambda expressions, and
+    object-oriented programming, making SYCL more approachable to those familiar with C++.
+\end{enumerate}
+
+In the following, the core concepts of SYCL are introduced, illustrated by a simple example program that serves as a reference for
+deeper explanations.
+
+\subsection{A Simple SYCL Example}
+
+Below is a minimal SYCL program that demonstrates its essential elements, including memory management, kernel execution, and
+synchronization:
+
+\begin{lstlisting}[language=C++, caption={A Simple SYCL Program}, label={lst:sycl-example}]
+#include <CL/sycl.hpp>
+#include <iostream>
+using namespace sycl;
+
+int main() {
+    constexpr size_t N = 16;
+    std::vector<int> data(N, 1); // Host code: Initialize a vector with 16 elements, all set to 1
+
+    // Host code: Create a SYCL queue to submit work
+    queue q;
+
+    {
+        // Host code: Create a buffer that wraps the vector data
+        buffer<int, 1> buf(data.data(), range<1>(N));
+
+        // Host code: Submit a command group to the queue
+        q.submit([&](handler& h) {
+            // Host and device code: Create an accessor to access the buffer in write mode
+            auto accessor = buf.get_access<access::mode::write>(h);
+
+            // Device code: Define the kernel using a parallel_for construct
+            h.parallel_for(range<1>(N), [=](id<1> idx) {
+                accessor[idx] *= 2; // Device code: Double each element
+            });
+        });
+    } // Host code: Buffer scope ends here, data is synchronized back to the host
+
+    // Host code: Print the modified data
+    for (int i = 0; i < N; ++i) {
+        std::cout << data[i] << " ";
+    }
+    std::cout << std::endl;
+
+    return 0;
+}
+\end{lstlisting}
+
+This program represents a fundamental SYCL workflow. The host initializes the data using a standard C++ vector. A buffer is created
+to encapsulate this data, enabling it to be transferred to and accessed by the device. The queue submits a kernel to the device,
+where the computational work is performed. Specifically, the \texttt{parallel\_for} construct represents the kernel that runs on the
+device. Within this kernel, each work-item processes an element of the buffer, doubling its value. Once the kernel execution
+completes, the updated data is automatically synchronized back to the host memory when the buffer's scope ends. The host code then
+prints the modified data.
+
+The key concepts demonstrated in this example, including memory management, task submission, synchronization, and kernel execution,
+are now explained in greater detail.
+
+\subsection{Core Concepts of SYCL}
+
+SYCL's design revolves around several core concepts that simplify heterogeneous programming. These concepts are discussed in detail
+below, with references to the example program to clarify their implementation.
+
+\subsubsection{Single-Source Programming and Host vs. Device Code}
+
+SYCL’s single-source programming model simplifies development by combining host and device code into a single source file written
+in standard C++. This unification contrasts with traditional models like CUDA and OpenCL, where host and device code are written
+separately. The kernel in the example is defined using a lambda expression within the host code, highlighting SYCL’s ability to
+seamlessly integrate host and device logic.
+
+However, SYCL imposes certain \textbf{limitations on device code} due to hardware constraints. Device code cannot use dynamic
+polymorphism, exceptions, or runtime type information (RTTI). For instance, features such as \texttt{typeid} and virtual function
+calls are not supported. These restrictions ensure compatibility with a wide range of devices and maintain computational efficiency
+\cite{reinders2020data}.
+
+\subsubsection{Asynchronous Task Graphs, Queues, and Synchronization}
+
+SYCL’s execution model is built on the concept of asynchronous task graphs, which allow computational tasks and memory operations to
+execute in parallel while respecting dependencies. A task graph is represented as a \textbf{directed acyclic graph (DAG)}, where
+nodes correspond to tasks (e.g., kernel executions or data transfers), and edges represent dependencies between these tasks. This
+model is fundamental to achieving high performance in heterogeneous computing environments, as it allows overlapping computation and
+memory transfers, reducing idle time on both host and device.
+
+At the core of SYCL’s task execution model are \textbf{queues}, which serve as a bridge between the host and devices. Queues are
+responsible for submitting tasks to the device and managing their execution order. Each queue is associated with a specific device,
+such as a CPU, GPU, or FPGA, and tasks submitted to the queue are executed on that device.
+
+SYCL supports two types of queues: \textbf{in-order} and \textbf{out-of-order}. In an in-order queue, tasks are executed strictly in
+the order they are submitted. Each task must complete before the next one begins, regardless of whether there are dependencies between
+the tasks. This behavior ensures a predictable execution flow, simplifying reasoning about task dependencies.
+
+In contrast, out-of-order queues allow tasks to execute as soon as their dependencies are resolved, regardless of the order in which
+they were submitted. This capability enables greater concurrency, as independent tasks can run in parallel. Dependencies between
+tasks are specified explicitly using events. \cite{SYCL2020}
+
+\textbf{Synchronization and Dependency Management}
+
+Regardless of the queue type, SYCL provides mechanisms to synchronize tasks and manage dependencies:
+\begin{itemize}
+    \item \textbf{Events}: Each task submission generates an event object, which can be queried to determine whether the task has
+    completed. Events can also be passed to subsequent tasks to define dependencies explicitly.
+    \item \textbf{Queue-Level Synchronization}: Developers can call \texttt{queue.wait()} to block the host until all tasks in the
+    queue have completed execution. This approach ensures that all previously submitted tasks are finalized before proceeding with
+    further operations on the host.
+\end{itemize}
+\cite{SYCL2020}
+
+\subsubsection{Memory Management and Data Flow}
+\label{sec:sycl-memory-management}
+
+Memory management is a critical aspect of SYCL, with two main approaches: \textbf{buffers and accessors} and \textbf{Unified Shared
+Memory (USM)}.
+
+\textbf{Buffers and Accessors}: Buffers encapsulate data that is shared between host and device memory. They automatically handle
+data transfers and synchronization. In the example, the buffer wraps the \texttt{data} array, ensuring that the device kernel can
+access and modify it. An accessor is used to specify the desired access mode (e.g., read, write, or read-write) and to provide safe
+access to the buffer's data within the kernel \cite{SYCL2020}.
+
+\textbf{Unified Shared Memory (USM)}: Introduced in SYCL 2020, USM offers a more flexible memory model. Unlike buffers, USM allows
+developers to allocate memory directly shared between the host and device. There are three types of USM:
+\begin{enumerate}
+    \item \textbf{Device Memory}: Allocated on the device, accessible only from the device. Explicit memory transfers are required to
+    move data between the host and device.
+    \item \textbf{Host Memory}: Allocated on the host, accessible from both host and device, but with performance overhead for device
+    access. Data is typically transferred over a bus, such as PCIe, which can introduce latency.
+    \item \textbf{Shared Memory}: Allocated in a shared memory space accessible by both host and device. The runtime handles data
+    transfer and reallocation behind the scenes, staging data on the device before kernel execution to minimize latency during
+    computation.
+\end{enumerate}
+
+Unified Shared Memory simplifies the integration of SYCL into existing applications by allowing developers to allocate memory using
+familiar C++ constructs such as \texttt{malloc} and \texttt{new}. This reduces the need to rewrite application logic to accommodate
+SYCL’s abstractions. Furthermore, USM is particularly advantageous for applications requiring indirect memory access. For example, in
+pointer-based data structures like linked lists or graphs, USM enables device kernels to follow pointers naturally without requiring
+additional data packing or offset calculations \cite{reinders2020data, SYCL2020}.
+
+
+
+\subsection{AdaptiveCpp: A SYCL implemenation}
+\label{sec:adaptivecpp}
+%some history
+%former highSycl
+%supports sycl programming model
+%
+%also stdpar -> efforts to add this explained in later chapter
+%special features:
+%  - hw support throug backends
+%  - show runtime architecture
+%  - single source single compiler pass, defined in sycl 2020 spec
+%  - is  able to detect which pars must be compiled for a device
+%  - device code is saved in device independent manner (LLVM IR)
+%  - jit compilation of LLVM IR to respsective device code (nvidia ptx, amd )
+%  - universal binary
+%  - memory management by runtime
+%    - unified memory
+
+
+AdaptiveCpp (formerly \textit{hipSYCL}), available under an open-source license at 
+\url{https://github.com/AdaptiveCpp/AdaptiveCpp}, is a SYCL implementation designed for performance portability
+across CPUs, NVIDIA GPUs, and AMD GPUs. Unlike traditional SYCL toolchains, AdaptiveCpp’s architecture emphasizes
+a \textbf{single-source, single-pass compiler} that generates \textbf{universal binaries} capable of targeting
+multiple accelerators without recompilation~\cite{alpay2021}.
+
+\subsubsection*{Compiler Architecture}
+
+\begin{figure}[h]
+    \centering
+    \includesvg[width=\textwidth]{images/acpp_compiler_workflow}
+    \caption{AdaptiveCpp Compiler Workflow}
+    \label{fig:acpp_compiler_workflow}
+\end{figure}
+
+The AdaptiveCpp compiler processes SYCL code in a single pass, generating a unified LLVM Intermediate 
+Representation (IR) that embeds both host and device code. This wofklow is shown in Figure~\ref{fig:acpp_compiler_workflow}.
+Device code regions (e.g., SYCL kernels) are annotated
+with metadata such as \texttt{\_\_attribute\_\_((sycl\_device))} to distinguish them from host logic. Crucially,
+this IR remains hardware-agnostic, deferring target-specific code generation to runtime. 
+During execution, the Just-in-Time (JIT) compiler extracts device code from the IR and compiles it to platform-specific instruction 
+sets (e.g., NVIDIA PTX, AMD GCN, or CPU multithreaded code) using different backends.
+The available device code generators are shown in Figure~\ref{fig:acpp_runtime}.
+This enables \textbf{universal binaries} that dynamically adapt to the available hardware, avoiding upfront commitment to a
+specific accelerator architecture~\cite{SYCL2020}.
+
+\begin{figure}[h]
+    \centering
+    \includesvg[width=\textwidth]{images/acpp_runtime}
+    \caption{AdaptiveCpp Device Code Generators~\cite{GitAdaptiveCpp}}
+    \label{fig:acpp_runtime}
+\end{figure}
+
+\subsubsection*{Memory Management}
+
+AdaptiveCpp implements SYCL’s memory model with a hybrid approach combining automatic and explicit strategies.
+For a detailed description of Unified Shared Memory (USM) and other memory types, please refer to 
+subsection~\ref{sec:sycl-memory-management}. The Buffer-Accessor Model uses \texttt{sycl::buffer<T>} to track memory 
+regions across host and device, while \texttt{sycl::accessor} objects define access modes (read/write) and 
+trigger implicit data transfers. The runtime constructs a directed acyclic graph (DAG) of kernel dependencies, 
+synchronizing memory automatically. For instance, overlapping writes to a buffer are resolved through 
+runtime-managed locks or atomic operations.
+
+Under the hood, AdaptiveCpp’s runtime delegates memory operations to backend-specific APIs (e.g., CUDA streams 
+for NVIDIA GPUs), but ensures these details are abstracted from developers. This minimizes manual memory 
+management while retaining performance close to native frameworks~\cite{SYCL2020}.
+
+\subsubsection*{Compilation Example}
+
+At a basic level, AdaptiveCpp provides a wrapper script (e.g., \texttt{acpp}) for building single-source programs
+that produce portable binaries. For instance:
+
+\begin{verbatim}
+acpp --acpp-targets=generic -o test test.cpp
+\end{verbatim}
+
+This command invokes the single-pass compiler to create a \textit{generic} universal binary that adapts 
+dynamically to the available hardware. Alternative flags can specify explicit usage of vendor compilers 
+(e.g., \texttt{cuda-nvcxx}) when targeting NVIDIA GPUs, allowing further customization and performance tuning.
+
+AdaptiveCpp not only supports SYCL’s programming model but the C++ standard parallelism library (stdpar) as well.
+This integration is explored in the subsequent sections starting with an introduction of the C++ standard parallelism programming model.

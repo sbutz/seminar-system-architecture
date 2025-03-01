@@ -10,10 +10,14 @@ all: $(TEXFILE).pdf
 
 $(TEXFILE).pdf: $(TEXFILE).tex
 	@mkdir -p $(OUTDIR)
-	$(TEX) -output-directory=$(OUTDIR) $(TEXFILE).tex
+	$(TEX) -shell-escape -output-directory=$(OUTDIR) $(TEXFILE).tex
 	$(BIB) $(OUTDIR)/$(TEXFILE)
-	$(TEX) -output-directory=$(OUTDIR) $(TEXFILE).tex
-	$(TEX) -output-directory=$(OUTDIR) $(TEXFILE).tex
+	$(TEX) -shell-escape -output-directory=$(OUTDIR) $(TEXFILE).tex
+	$(TEX) -shell-escape -output-directory=$(OUTDIR) $(TEXFILE).tex
+
+wordcount: $(TEXFILE).pdf
+	@echo "Word count: "
+	@pdftotext $(OUTDIR)/$(TEXFILE).pdf - | wc -w
 
 clean:
 	rm -rf $(OUTDIR)
