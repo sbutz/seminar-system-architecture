@@ -1,0 +1,24 @@
+\begin{abstract}
+Modern hardware accelerators such as GPUs and FPGAs provide immense computational power, yet their
+utilization remains challenging due to the complexity of existing programming models. While low-level
+solutions such as CUDA and OpenCL offer high performance, they require specialized knowledge,
+limiting accessibility. High-level approaches like SYCL aim to bridge this gap by providing a modern,
+C++-based abstraction for heterogeneous computing.
+
+This paper explores the integration of SYCL as a backend for C++ Standard Parallelism (stdpar) through
+the AdaptiveCpp compiler. By leveraging compiler-driven transformations, this approach enables efficient
+execution of stdpar workloads on heterogeneous devices while maintaining the high-level abstraction
+expected from the C++ standard library. Key challenges in execution, memory management, and
+synchronization are identified, and solutions leveraging SYCL’s task-based execution model and Unified
+Shared Memory (USM) are presented.
+
+Performance optimizations, including kernel launch overhead reduction, memory pooling, and conditional
+offloading, are analyzed to demonstrate the effectiveness of this integration. The evaluation confirms that
+the AdaptiveCpp approach provides competitive performance compared to vendor-specific implementations
+while maintaining portability across different hardware architectures.
+
+This study highlights the broader implications of compiler-assisted parallelism, demonstrating how tighter
+integration between C++ standard features and heterogeneous programming models can simplify adoption
+and improve efficiency. Future C++ standards, including senders/receivers and std::simd, will further
+enhance the expressiveness and performance of parallel programming in modern software development.
+\end{abstract}
