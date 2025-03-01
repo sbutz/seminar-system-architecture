@@ -55,7 +55,7 @@ series = {IWOCL '24}
 
 @manual{NVIDIA2020,
   title        = {C++ Parallel Algorithms},
-  author       = {NVIDIA Corporation},
+  author       = {NVIDIA},
   year         = {2020},
   url          = {https://docs.nvidia.com/hpc-sdk/archive/20.7/pdf/hpc207c%2B%2B_par_alg.pdf}
 }
@@ -81,5 +81,69 @@ series = {IWOCL '24}
   author       = {cppreference.com},
   year         = {2023},
   url          = {https://en.cppreference.com/w/cpp/experimental/simd},
+  note         = {Accessed: 2024-03-01}
+}
+
+@inproceedings{10.1145/2509136.2509515,
+author = {Meyerovich, Leo A. and Rabkin, Ariel S.},
+title = {Empirical analysis of programming language adoption},
+year = {2013},
+isbn = {9781450323741},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/2509136.2509515},
+doi = {10.1145/2509136.2509515},
+abstract = {Some programming languages become widely popular while others fail to grow beyond their niche or disappear altogether. This paper uses survey methodology to identify the factors that lead to language adoption. We analyze large datasets, including over 200,000 SourceForge projects, 590,000 projects tracked by Ohloh, and multiple surveys of 1,000-13,000 programmers.We report several prominent findings. First, language adoption follows a power law; a small number of languages account for most language use, but the programming market supports many languages with niche user bases. Second, intrinsic features have only secondary importance in adoption. Open source libraries, existing code, and experience strongly influence developers when selecting a language for a project. Language features such as performance, reliability, and simple semantics do not. Third, developers will steadily learn and forget languages. The overall number of languages developers are familiar with is independent of age. Finally, when considering intrinsic aspects of languages, developers prioritize expressivity over correctness. They perceive static types as primarily helping with the latter, hence partly explaining the popularity of dynamic languages.},
+booktitle = {Proceedings of the 2013 ACM SIGPLAN International Conference on Object Oriented Programming Systems Languages \&amp; Applications},
+pages = {1–18},
+numpages = {18},
+keywords = {programming language adoption, survey research},
+location = {Indianapolis, Indiana, USA},
+series = {OOPSLA '13}
+}
+
+@article{usage_of_languages,
+author = {Meyerovich, Leo A. and Rabkin, Ariel S.},
+title = {Empirical analysis of programming language adoption},
+year = {2013},
+issue_date = {October 2013},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {48},
+number = {10},
+issn = {0362-1340},
+url = {https://doi.org/10.1145/2544173.2509515},
+doi = {10.1145/2544173.2509515},
+abstract = {Some programming languages become widely popular while others fail to grow beyond their niche or disappear altogether. This paper uses survey methodology to identify the factors that lead to language adoption. We analyze large datasets, including over 200,000 SourceForge projects, 590,000 projects tracked by Ohloh, and multiple surveys of 1,000-13,000 programmers.We report several prominent findings. First, language adoption follows a power law; a small number of languages account for most language use, but the programming market supports many languages with niche user bases. Second, intrinsic features have only secondary importance in adoption. Open source libraries, existing code, and experience strongly influence developers when selecting a language for a project. Language features such as performance, reliability, and simple semantics do not. Third, developers will steadily learn and forget languages. The overall number of languages developers are familiar with is independent of age. Finally, when considering intrinsic aspects of languages, developers prioritize expressivity over correctness. They perceive static types as primarily helping with the latter, hence partly explaining the popularity of dynamic languages.},
+journal = {SIGPLAN Not.},
+month = oct,
+pages = {1–18},
+numpages = {18},
+keywords = {programming language adoption, survey research}
+}
+
+@book{opencl_guide,
+  author = {Munshi, Aaftab and Gaster, Benedict and Mattson, Timothy G. and Fung, James and Ginsburg, Dan},
+  title = {OpenCL Programming Guide},
+  year = {2011},
+  isbn = {0321749642},
+  publisher = {Addison-Wesley Professional},
+  edition = {1st},
+  abstract = {Using the new OpenCL (Open Computing Language) standard, you can write applications that access all available programming resources: CPUs, GPUs, and other processors such as DSPs and the Cell/B.E. processor. Already implemented by Apple, AMD, Intel, IBM, NVIDIA, and other leaders, OpenCL has outstanding potential for PCs, servers, handheld/embedded devices, high performance computing, and even cloud systems. This is the first comprehensive, authoritative, and practical guide to OpenCL 1.1 specifically for working developers and software architects. Written by five leading OpenCL authorities, OpenCL Programming Guide covers the entire specification. It reviews key use cases, shows how OpenCL can express a wide range of parallel algorithms, and offers complete reference material on both the API and OpenCL C programming language. Through complete case studies and downloadable code examples, the authors show how to write complex parallel programs that decompose workloads across many different devices. They also present all the essentials of OpenCL software performance optimization, including probing and adapting to hardware. Coverage includes Understanding OpenCLs architecture, concepts, terminology, goals, and rationaleProgramming with OpenCL C and the runtime APIUsing buffers, sub-buffers, images, samplers, and eventsSharing and synchronizing data with OpenGL and Microsofts Direct3DSimplifying development with the C++ Wrapper APIUsing OpenCL Embedded Profiles to support devices ranging from cellphones to supercomputer nodesCase studies dealing with physics simulation; image and signal processing, such as image histograms, edge detection filters, Fast Fourier Transforms, and optical flow; math libraries, such as matrix multiplication and high-performance sparse matrix multiplication; and more}
+}
+
+@manual{NVIDIA_CUDA_ProgGuide,
+  title        = {CUDA C Programming Guide},
+  author       = {NVIDIA},
+  year         = {2024},
+  url          = {https://docs.nvidia.com/cuda/cuda-c-programming-guide/},
+  note         = {Accessed: 2024-03-01}
+}
+
+@manual{AMD_ROCm_Docs,
+  title        = {ROCm Documentation},
+  author       = {Advanced Micro Devices (AMD)},
+  year         = {2024},
+  url          = {https://rocm.docs.amd.com/en/latest/},
   note         = {Accessed: 2024-03-01}
 }

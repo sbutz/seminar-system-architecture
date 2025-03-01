@@ -4,12 +4,16 @@ Modern hardware accelerators, such as GPUs and FPGAs, offer significant computat
 for improving the performance of many applications. However, using these accelerators is challenging because they
 require specialized knowledge of their architectures and programming models.
 
-To address this, many libraries and frameworks have been created. Low-level libraries like CUDA for NVIDIA GPUs 
-and ROCm for AMD GPUs provide detailed control over hardware. However, they also demand in-depth understanding of 
+To address this, many libraries and frameworks have been created. Low-level libraries like CUDA for NVIDIA GPUs
+\cite{NVIDIA_CUDA_ProgGuide}
+and ROCm for AMD GPUs
+\cite{AMD_ROCm_Docs}
+provide detailed control over hardware. However, they also demand in-depth understanding of 
 hardware-specific programming. This makes them difficult for developers who are not experts in high-performance 
 computing.
 
-Higher-level frameworks aim to simplify programming for accelerators while maintaining good performance. OpenCL, 
+Higher-level frameworks aim to simplify programming for accelerators while maintaining good performance. OpenCL,
+\cite{opencl_guide} 
 for instance, provides a platform-neutral model that works across CPUs, GPUs, and other accelerators. SYCL builds 
 on OpenCL, offering a modern C++ interface that aligns with standard C++ practices. A key strength of SYCL is its 
 multi-platform support, allowing developers to write portable code that can run on a variety of hardware, including 
@@ -27,10 +31,12 @@ to project costs. Simplifying the programming process helps reduce these expense
 solving domain-specific problems rather than hardware-specific challenges. Faster project completion also brings 
 business benefits, such as quicker time-to-market and improved competitiveness.
 
-C++ is one of the most widely used programming languages. It is known for its performance, flexibility, and large 
+C++ is one of the most widely used programming languages.
+\cite{usage_of_languages}
+It is known for its performance, flexibility, and large 
 ecosystem. With the introduction of parallel algorithms in C++17, the language has made a major step towards 
 simplifying parallel programming. These algorithms allow developers to express parallelism at a high level, avoiding 
-the need to understand the details of the underlying hardware.
+the need to understand the details of the underlying hardware. \cite{V'yukova2018}
 
 In their research, Aksel Alpay and Vincent Heuveline demonstrated how the SYCL programming model can act as a backend 
 for C++ standard parallelism. A key advantage of this approach is that developers can use idiomatic C++ without having 

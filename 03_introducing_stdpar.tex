@@ -4,7 +4,8 @@
 The evolution of C++ has consistently aimed to enhance performance and efficiency. A significant milestone in
 this journey was the introduction of standard parallelism, commonly referred to as \textbf{stdpar}, in the
 C++17 standard. This feature provides developers with a standardized and portable approach to writing parallel
-code, facilitating the efficient utilization of modern multi-core processors and accelerators~\cite{V'yukova2018}.
+code, facilitating the efficient utilization of modern multi-core processors and accelerators.
+This introduction is baed on work of V’yukova, et al ~\cite{V'yukova2018}.
 
 \subsection{Background and Motivation}
 
@@ -29,10 +30,10 @@ These policies can be applied to standard algorithms to control their execution 
 
 \subsection{Example Usage of stdpar}
 
-Here's a simple example demonstrating the use of \texttt{std::execution::par} to parallelize a standard
+Listing~\ref{lst:parallel_example} shows a simple example demonstrating the use of \texttt{std::execution::par} to parallelize a standard
 algorithm:
 
-\begin{lstlisting}[language=C++, caption={Parallel execution using \texttt{std::execution::par}}]
+\begin{lstlisting}[language=C++, caption={Parallel execution using \texttt{std::execution::par}}, label={lst:parallel_example}]
 #include <algorithm>
 #include <execution>
 #include <vector>

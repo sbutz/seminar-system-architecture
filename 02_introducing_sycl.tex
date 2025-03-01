@@ -57,6 +57,7 @@
 % 
 % again putting in perspective of our example
 
+The following introduction is based on SYCL 2020 specification \cite{SYCL2020} and a SYCL Programming Guide \cite{reinders2020data}.
 SYCL, an open standard developed by the Khronos Group, is a modern programming model designed to address the challenges of
 heterogeneous computing. Originating from the OpenCL ecosystem, SYCL builds on OpenCL's foundation but introduces higher-level
 abstractions and a more intuitive programming model. Its purpose is to simplify the development of applications that target
@@ -78,8 +79,19 @@ deeper explanations.
 
 \subsection{A Simple SYCL Example}
 
-Below is a minimal SYCL program that demonstrates its essential elements, including memory management, kernel execution, and
-synchronization:
+Listing~\ref{lst:sycl-example} shows a minimal SYCL program that demonstrates its essential elements, including memory management, kernel execution, and
+synchronization.
+
+This program represents a fundamental SYCL workflow. The host initializes the data using a standard C++ vector. A buffer is created
+to encapsulate this data, enabling it to be transferred to and accessed by the device. The queue submits a kernel to the device,
+where the computational work is performed. Specifically, the \texttt{parallel\_for} construct represents the kernel that runs on the
+device. Within this kernel, each work-item processes an element of the buffer, doubling its value. Once the kernel execution
+completes, the updated data is automatically synchronized back to the host memory when the buffer's scope ends. The host code then
+prints the modified data.
+
+The key concepts demonstrated in this example, including memory management, task submission, synchronization, and kernel execution,
+are now explained in greater detail.
+
 
 \begin{lstlisting}[language=C++, caption={A Simple SYCL Program}, label={lst:sycl-example}]
 #include <CL/sycl.hpp>
@@ -118,16 +130,6 @@ int main() {
     return 0;
 }
 \end{lstlisting}
-
-This program represents a fundamental SYCL workflow. The host initializes the data using a standard C++ vector. A buffer is created
-to encapsulate this data, enabling it to be transferred to and accessed by the device. The queue submits a kernel to the device,
-where the computational work is performed. Specifically, the \texttt{parallel\_for} construct represents the kernel that runs on the
-device. Within this kernel, each work-item processes an element of the buffer, doubling its value. Once the kernel execution
-completes, the updated data is automatically synchronized back to the host memory when the buffer's scope ends. The host code then
-prints the modified data.
-
-The key concepts demonstrated in this example, including memory management, task submission, synchronization, and kernel execution,
-are now explained in greater detail.
 
 \subsection{Core Concepts of SYCL}
 
@@ -228,6 +230,8 @@ additional data packing or offset calculations \cite{reinders2020data, SYCL2020}
 %    - unified memory
 
 
+The following introudction is based on the work of Aksel Alpay and Vincent Heuveline in their paper
+\textit{AdaptiveCpp Stdpar: C++ Standard Parallelism Integrated Into a SYCL Compiler}~\cite{alpay2021}.
 AdaptiveCpp (formerly \textit{hipSYCL}), available under an open-source license at 
 \url{https://github.com/AdaptiveCpp/AdaptiveCpp}, is a SYCL implementation designed for performance portability
 across CPUs, NVIDIA GPUs, and AMD GPUs. Unlike traditional SYCL toolchains, AdaptiveCpp’s architecture emphasizes
