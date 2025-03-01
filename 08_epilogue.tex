@@ -1,1 +1,67 @@
 \section{Epilogue}
+\label{sec:epilogue}
+
+As we look toward the future of C++ and its capabilities in parallel computing, two forthcoming features
+stand out: \textbf{Senders/Receivers} and \textbf{\texttt{std::simd}}. These additions aim to enhance
+asynchronous programming and data-parallel operations, respectively.
+
+\subsection{Senders/Receivers: A New Paradigm for Asynchronous Programming}
+
+The Senders/Receivers framework introduces a standardized approach to asynchronous operations in C++.
+This model is built around three primary abstractions:
+
+\begin{itemize}
+    \item \textbf{Senders}: Represent asynchronous computations that will eventually produce a result.
+    \item \textbf{Receivers}: Define how to handle the outcome of these computations, including successful
+          results, errors, or cancellations.
+    \item \textbf{Schedulers}: Manage the execution context for these operations, determining where and
+          when tasks run.
+\end{itemize}
+
+This framework offers several advantages:
+
+\begin{itemize}
+    \item \textbf{Composability}: Developers can build complex asynchronous workflows by composing simpler
+          operations.
+    \item \textbf{Efficiency}: By providing a unified model, it reduces the overhead associated with managing
+          asynchronous tasks.
+    \item \textbf{Extensibility}: The modular nature allows for easy integration with various execution
+          environments and libraries.
+\end{itemize}
+
+For a comprehensive overview, refer to the proposal:
+
+\begin{itemize}
+    \item \textbf{P2300R10: \texttt{std::execution}}: This document details the design and rationale behind
+          the Senders/Receivers framework \cite{p2300r10}.
+\end{itemize}
+
+\subsection{\texttt{std::simd}: Enhancing Data-Parallel Computation}
+
+The introduction of \texttt{std::simd} brings standardized support for SIMD (Single Instruction, Multiple
+Data) operations to C++. This feature allows developers to write data-parallel code that can be efficiently
+executed across different hardware architectures.
+
+Key aspects of \texttt{std::simd} include:
+
+\begin{itemize}
+    \item \textbf{Portability}: Provides a consistent interface for SIMD operations, ensuring code can run
+          efficiently on various platforms.
+    \item \textbf{Performance}: Enables explicit vectorization, allowing developers to harness the full
+          potential of modern CPUs and accelerators.
+    \item \textbf{Integration}: Seamlessly integrates with existing C++ codebases, facilitating the adoption
+          of data-parallel programming practices.
+\end{itemize}
+
+For detailed information, consider the following resources:
+
+\begin{itemize}
+    \item \textbf{\texttt{std::experimental::simd} Documentation}: Offers insights into the experimental
+          implementation and usage of SIMD types in C++ \cite{simd_cppreference}.
+    \item \textbf{P3024R0: Interface Directions for \texttt{std::simd}}: Discusses the design considerations
+          and future directions for the \texttt{std::simd} interface \cite{p3024r0}.
+\end{itemize}
+
+The integration of these features into the C++ standard signifies a substantial advancement in the language's
+support for parallel and asynchronous programming. As these capabilities become mainstream, developers will
+be better equipped to write efficient, scalable, and maintainable code for modern computing environments.

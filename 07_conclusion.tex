@@ -1,1 +1,38 @@
 \section{Conclusion}
+\label{sec:conclusion}
+
+This work has explored the integration of C++ Standard Parallelism (stdpar) with SYCL through the AdaptiveCpp
+compiler, demonstrating how a tightly integrated compiler approach can enable efficient parallel execution on
+heterogeneous hardware. By leveraging SYCL as a backend, AdaptiveCpp enables stdpar-based applications to
+execute seamlessly across CPUs, GPUs, and other accelerators, maintaining both performance and portability.
+
+\paragraph{Summary of Findings}
+The study has shown that AdaptiveCpp’s compiler-based approach provides several key advantages:
+
+\begin{itemize}
+    \item \textbf{Tighter integration with the compiler provides significant advantages}, allowing for more efficient
+          optimizations compared to purely runtime-based solutions such as NVIDIA’s \texttt{nvc++}.
+    \item \textbf{Optimized execution}, reducing kernel launch overhead, improving memory management, and enhancing
+          synchronization, leading to more efficient parallel execution.
+    \item \textbf{Seamless memory handling}, as USM pooling and optimized buffer-accessor usage significantly reduce
+          data transfer overhead and improve execution efficiency.
+    \item \textbf{Conditional offloading is a general strategy} that ensures workloads are executed on the most suitable
+          hardware, avoiding inefficient GPU offloading for small computations.
+\end{itemize}
+
+\paragraph{Implications for the Future of Parallel Computing}
+The success of AdaptiveCpp in integrating stdpar with SYCL highlights several broader implications:
+
+\begin{itemize}
+    \item \textbf{Lowering the bar for the use of modern hardware accelerators}, making parallel computing more
+          accessible to developers without specialized hardware knowledge.
+    \item \textbf{Enhancing the C++ ecosystem} by demonstrating how SYCL can serve as a robust backend for standardized
+          parallel programming models, fostering greater adoption of heterogeneous computing in modern C++
+          development.
+    \item \textbf{Encouraging future compiler optimizations} that further improve execution performance and hardware
+          adaptability across diverse architectures.
+\end{itemize}
+
+While this work has demonstrated the feasibility of using SYCL as a backend for stdpar, additional optimizations
+and refinements can further improve execution efficiency and scalability. The following section discusses possible
+directions for future research and enhancements.
