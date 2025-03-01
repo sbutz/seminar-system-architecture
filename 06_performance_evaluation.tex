@@ -1,0 +1,75 @@
+\section{Performance Evaluation}
+\label{sec:performance_evaluation}
+
+The performance evaluation of AdaptiveCpp’s stdpar backend is based on the benchmarking results provided in
+Aksel Alpay and Vincent Heuveline’s paper \textit{AdaptiveCpp Stdpar: C++ Standard Parallelism Integrated Into
+a SYCL Compiler}~\cite{alpay2021}. Due to the lack of a complete independent test setup, this section summarizes
+the key findings from the original paper and discusses their implications. Readers interested in a detailed
+description of the experimental methodology, hardware configurations, and benchmarking tools are referred to
+the original work.
+
+\subsection{Comparative Performance Analysis}
+\label{sec:comparative_performance}
+
+A key aspect of evaluating AdaptiveCpp’s stdpar backend is its performance relative to existing implementations.
+The experimental results highlight the following comparisons:
+
+\paragraph{Overall Speedup}
+The execution of stdpar workloads using AdaptiveCpp’s SYCL backend achieves notable speedups when compared
+to traditional CPU execution. Compared to NVIDIA’s proprietary \texttt{nvc++} stdpar backend, AdaptiveCpp
+demonstrates competitive performance while maintaining broader hardware compatibility.
+
+\paragraph{Kernel Launch Efficiency}
+The reduction in kernel launch overhead, facilitated by AdaptiveCpp’s instant kernel submission model, results
+in improved execution times. By minimizing redundant synchronization and event dependencies, kernel execution
+latency is reduced, leading to a more efficient mapping of stdpar operations to SYCL kernels.
+
+\paragraph{Memory Optimization Benefits}
+The introduction of USM pooling in AdaptiveCpp significantly reduces memory allocation and transfer overhead.
+By ensuring that memory is preallocated and reused efficiently, AdaptiveCpp minimizes host-device memory
+transfer bottlenecks, particularly in workloads that involve frequent memory access.
+
+\paragraph{Synchronization Efficiency}
+The optimizations in event dependency management and lazy synchronization further contribute to reduced
+execution stalls. The paper’s results confirm that the removal of redundant synchronization barriers improves
+overall execution throughput without compromising correctness.
+
+\subsection{Scalability Analysis}
+\label{sec:scalability_analysis}
+
+The scalability of AdaptiveCpp’s stdpar backend is evaluated across various hardware configurations and dataset
+sizes. The findings indicate the following trends:
+
+\paragraph{Hardware Scalability}
+Performance improvements scale effectively across different GPU architectures and CPU-based parallel
+execution environments. AdaptiveCpp enables seamless execution across heterogeneous devices, demonstrating
+strong adaptability to varying compute resources.
+
+\paragraph{Workload Scaling}
+For large workloads, AdaptiveCpp’s optimizations ensure sustained performance improvements over traditional
+CPU execution. However, for small workloads, the effectiveness of GPU offloading is more variable, reinforcing
+the importance of the conditional offloading heuristic that keeps small computations on the CPU.
+
+\subsection{Summary of Performance Findings}
+\label{sec:performance_summary}
+
+The experimental evaluation confirms that AdaptiveCpp’s stdpar backend provides an efficient mapping of
+high-level parallel algorithms onto SYCL’s explicit execution model. The key takeaways from the performance
+analysis include:
+
+\begin{itemize}
+    \item AdaptiveCpp achieves competitive execution performance compared to vendor-specific stdpar
+          implementations while maintaining hardware portability.
+    \item Kernel launch overhead is minimized through optimizations in task submission and event dependency
+          tracking.
+    \item Memory transfer overhead is significantly reduced due to USM pooling and optimized buffer
+          management strategies.
+    \item Synchronization optimizations effectively eliminate redundant barriers, leading to improved
+          execution efficiency.
+    \item Performance scaling across different hardware architectures validates AdaptiveCpp’s adaptability
+          to various compute environments.
+\end{itemize}
+
+These findings demonstrate the effectiveness of AdaptiveCpp’s approach in bridging the gap between stdpar’s
+high-level abstraction and SYCL’s explicit parallel execution model. Future work may further explore additional
+compiler optimizations to enhance performance in specific workload scenarios.
